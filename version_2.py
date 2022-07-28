@@ -93,10 +93,10 @@ def spread_3d(mas_V, cap3, cap_3d, x, y, z, v_crit = 3.5 * 10**(-13)):
     # функция правил растекания для 3d
     sh = cap3.shape
 
-    count = 0
+    """count = 0
     sh = cap3.shape
     st = str(x) + " " + str(y)
-    v = mas_V.get(st)
+    v = mas_V.get(st)"""
 
     if x - 1 > 0:
         if cap_3d[x - 1][y][z] == 0:
@@ -168,7 +168,7 @@ def spread_2d(cap, cap_2d, x, y, mas_S, v_crit = 3.5 * 10**(-13)):
 def func():
     mas_V = {}
     mas_S = {}
-    V = 300 * 3.5 * 10**(-13)
+    V = 300 * 3.5 * 10**(-10)
     cap_3d, cap_2d, mas_V, mas_S = liquid_start(V, mas_V, mas_S, capacity_2d, capacity)
 
     cap = deepcopy(cap_2d)
@@ -212,6 +212,10 @@ def func():
 
         line = ax_2d.scatter(x_li_2d, y_li_2d, color="blue")
         frames_2d.append([line])
+
+
+
+
 
 
 func()

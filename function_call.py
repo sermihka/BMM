@@ -18,6 +18,6 @@ frame = Frame(win, bg='gray')
 frame.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8)
 
 win.mainloop()
-# version_2.func()
+#version_2.func()
 
 
