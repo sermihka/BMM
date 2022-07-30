@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.animation import ArtistAnimation
 
+
+
 # окно для отображения 3d графика
 fig_3d = plt.figure(figsize=(10, 7))
 frames_3d = [] # для анимации

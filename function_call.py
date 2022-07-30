@@ -68,7 +68,7 @@ def btn_click():
         # тупо по вертикали не учитывая распространения по горизонтали
         x_grid = np.append(x_grid, 0.8*n*(10**(-4)))
         y_grid = np.append(y_grid, t_vertical)
-    graf = ax_graf.plot(x_grid, y_grid)
+    graf = ax_graf.plot(y_grid, x_grid)
     plt.show()
 
 
