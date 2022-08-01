@@ -2,13 +2,14 @@ import numpy as np
 from copy import deepcopy
 import matplotlib.pyplot as plt
 import time
-# окно для отрисовки графика
 
+# окно для отрисовки графика
 fig_2d = plt.figure(figsize=(7, 7))
 
 ax_2d = fig_2d.add_subplot()
 ax_2d.set_title("baze")
 
+# размеры массива
 ax0_max = 40
 ax1_max = 40
 ax2_max = 40
@@ -18,7 +19,7 @@ vertical = np.array([[[0. for i in range(ax0_max + 1)] for j in range(ax1_max + 
 horizontal_ax1 = deepcopy(vertical)
 # вдоль оси ax2
 horizontal_ax2 = deepcopy(vertical)
-# vertical[y][x] y - вертикаль, х - горизонталь
+# vertical[ax0][ax1][ax2] ax0 - вертикаль
 
 # максимально возможное значение в трубочке
 TUBE_MAX = 1.0
@@ -48,8 +49,10 @@ LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
 start_time = time.time()
 
 for n in range(300):
+    # типо жидкость капает
     vertical[0][ax1_max//2][ax2_max//2] = 1
 
+    # копируем массивы
     ver = deepcopy(vertical)
     hor_ax1 = deepcopy(horizontal_ax1)
     hor_ax2 = deepcopy(horizontal_ax2)
@@ -58,7 +61,7 @@ for n in range(300):
     for ax0 in range(ax0_max):
         for ax1 in range(ax1_max):
             for ax2 in range(ax2_max):
-
+                # проход по вертикальным трубочкам
                 if vertical[ax0][ax1][ax2] > DOWN_MIN:
                     # то, сколько вытекает
                     down = vertical[ax0][ax1][ax2] * DOWN_PERS
@@ -88,6 +91,7 @@ for n in range(300):
                     hor_ax2[ax0][ax1][ax2] = hor_ax2[ax0][ax1][ax2] + down_ax2
                     ver[ax0 + 1][ax1][ax2] = ver[ax0 + 1][ax1][ax2] + down_down
 
+                # проход по горизонтальным вдоль оси ax1
                 if horizontal_ax1[ax0][ax1][ax2] > LR_MIN:
 
                     spread = horizontal_ax1[ax0][ax1][ax2] * LR_PERS
@@ -97,6 +101,8 @@ for n in range(300):
                     spread_l = spread * LR_PERS_L
                     # перетекает в вертикаль
                     spread_d = spread * LR_PERS_DOWN
+
+                    # дальше, по сути, всё аналогично вретикальному растеканию
 
                     tube_max_sp_r = TUBE_MAX - horizontal_ax1[ax0][ax1 + 1][ax2]
                     tube_max_sp_l = TUBE_MAX - horizontal_ax1[ax0][ax1 - 1][ax2]
@@ -116,7 +122,7 @@ for n in range(300):
                     hor_ax1[ax0][ax1 - 1][ax2] = hor_ax1[ax0][ax1 - 1][ax2] + spread_l
                     ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] + spread_d
 
-                # то же самое, по оси ax2
+                # проход по горизонтальным вдоль оси ax2
                 if horizontal_ax2[ax0][ax1][ax2] > LR_MIN:
                     ax2spread = horizontal_ax2[ax0][ax1][ax2] * LR_PERS
                     # перетикает вправо вдоль оси ax1
@@ -143,16 +149,21 @@ for n in range(300):
                     hor_ax2[ax0][ax1][ax2 + 1] = hor_ax2[ax0][ax1][ax2 + 1] + ax2spread_r
                     hor_ax2[ax0][ax1][ax2 - 1] = hor_ax2[ax0][ax1][ax2 - 1] + ax2spread_l
                     ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] + ax2spread_d
+
+    # опять перезаписываем массивы
     vertical = deepcopy(ver)
     horizontal_ax1 = deepcopy(hor_ax1)
     horizontal_ax2 = deepcopy(hor_ax2)
+# выводит время работы проги
 print('Finished cycle in %s seconds' % (time.time() - start_time))
+
+# ну а тут у нас по сути разрез берётся
 result = np.array([[0. for i in range(ax0_max)] for j in range(ax1_max)])
 for ax0 in range(ax0_max):
     for ax1 in range(ax1_max):
         result[ax0][ax1] = vertical[ax0][ax1][ax2_max//2]
 
-
+# отображение градиента
 ax_2d.imshow(result)
 
 plt.show()
