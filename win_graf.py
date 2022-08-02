@@ -28,7 +28,7 @@ def start():
     global choice_liquid
     global choice_soil
     if choice_soil == 'sand' and choice_liquid == 'water':
-        v, h1, h2 = pipeline_3d_model.cycle(300)
+        v, h1, h2 = pipeline_3d_model.cycle(700)
         RES = pipeline_3d_model.incision(v, h1, h2)
         pipeline_3d_model.graph(RES)
 
@@ -48,7 +48,7 @@ tk.Label(win, text='Выберите жидкость', bg='#43FF91', font=('Ari
 tk.Label(win, text='Выберите породу', bg='#43FF91', font=('Arial', 10, 'bold'), width=15, height=5,).grid(row=0, column=1, stick='we')
 tk.Label(win, text='Нажмите для вывода', bg='#43FF91', font=('Arial', 10, 'bold'), width=15, height=5, justify=tk.CENTER).grid(row=0, column=2, stick='we')
 # кнопки
-tk.Button(win, text='liquid', command=liquid).grid(row=1, column=0, stick='we', rowspan=(2))
+tk.Button(win, text='liquid', command=liquid).grid(row=1, column=0, stick='we', rowspan=2)
 tk.Button(win, text='soil', command=soil).grid(row=2, column=1, stick='we')
 tk.Button(win, text='start', command=start).grid(row=3, column=2)
 # минимальные размеры колонок
