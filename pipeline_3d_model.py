@@ -186,12 +186,12 @@ def graph(result):
     plt.show()
 
 
-def incision(v, h1, h2):
+def incision(v, h1, h2, ax2_incision=ax2_max // 2):
     # ну а тут у нас по сути разрез берётся
     result = np.array([[0. for f in range(ax0_max)] for g in range(ax1_max)])
     for ax0 in range(ax0_max):
         for ax1 in range(ax1_max):
-            result[ax0][ax1] = v[ax0][ax1][ax2_max // 2] + h1[ax0][ax1][ax2_max // 2] + h2[ax0][ax1][ax2_max // 2]
+            result[ax0][ax1] = v[ax0][ax1][ax2_incision] + h1[ax0][ax1][ax2_incision] + h2[ax0][ax1][ax2_incision]
     return result
 
 # v, h1, h2 = cycle(400)
