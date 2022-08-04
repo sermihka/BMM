@@ -17,31 +17,28 @@ horizontal_ax2 = deepcopy(vertical)
 
 # vertical[ax0][ax1][ax2] ax0 - вертикаль
 
-def cycle(z, vertic=vertical, horizon_ax1=horizontal_ax1, horizon_ax2=horizontal_ax2):
+def cycle(z,
+          DOWN_MIN = 0.1,  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
+          DOWN_PERS = 0.4,  # процент от объёма воды, который утекает
+          DOWN_PERS_ax1 = 0.3,  # процент(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+          DOWN_PERS_ax2 = 0.3,  # процент(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+          LR_MIN = 0.05,  # минимальноеколичество по горизонтали для вытекания
+          LR_PERS = 0.3,  # Сколько вытекает в общем
+          LR_PERS_L = 0.3,  # то, сколько перетекает в бок
+          LR_PERS_R = 0.3,
+          vertic=vertical,
+          horizon_ax1=horizontal_ax1,
+          horizon_ax2=horizontal_ax2
+          ):
+
     # для проверки того, как долго работает цикл
     start_time = time.time()
 
-    # максимально возможное значение в трубочке
-    TUBE_MAX = 1.0
-    # минимально количество жидкости в трубочке
-    # по вертикали после которого вода течёт
-    DOWN_MIN = 0.1
-    # процент от объёма воды, который утекает
-    DOWN_PERS = 0.3
-    # процент(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
-    DOWN_PERS_ax1 = 0.3
-    # процент(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
-    DOWN_PERS_ax2 = 0.3
+    TUBE_MAX = 1.0  # максимально возможное значение в трубочке
+
     # процент(от DOWN_PERS) который переходит в вертикаль ячейки, которая ниже
     DOWN_PERS_DOWN = 1.0 - DOWN_PERS_ax1 - DOWN_PERS_ax2
 
-    # минимальноеколичество по горизонтали для вытекания
-    LR_MIN = 0.01
-    # Сколько вытекает в общем
-    LR_PERS = 0.3
-    # то, сколько перетекает в бок
-    LR_PERS_L = 0.3
-    LR_PERS_R = 0.3
     # то, сколько перетекает в вертикаль
     LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
 
@@ -176,11 +173,11 @@ def cycle(z, vertic=vertical, horizon_ax1=horizontal_ax1, horizon_ax2=horizontal
     return vertic, horizon_ax1, horizon_ax2
 
 
-def graph(result):
+def graph(result, ax2_incision=ax2_max // 2):
     # окно для отрисовки графика
     fig_2d = plt.figure(figsize=(7, 7))
     ax_2d = fig_2d.add_subplot()
-    ax_2d.set_title("baze")
+    ax_2d.set_title("разрез по оси ax2" + '\n' + "по координате " + str(ax2_incision))
     # отображение градиента
     ax_2d.imshow(result)
     plt.show()
