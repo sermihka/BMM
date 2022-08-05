@@ -4,9 +4,11 @@
 """
 import tkinter as tk
 import pipeline_3d_model
-
-choice_soil = ''
-choice_liquid = ''
+import numpy as np
+from copy import deepcopy
+import time
+choice_soil = 'soil'
+choice_liquid = 'liquid'
 ax_incision = pipeline_3d_model.ax0_max // 2
 D_M = 0.1
 D_P = 0.4
@@ -112,29 +114,18 @@ def separation():
     pass
 
 
-def water():
-    # функция вызванная кнопкой воды
-    global choice_liquid
-    choice_liquid = 'water'
 
-
-def sand():
-    # функция вызванная кнопкой "песок"
-    global choice_soil
-    choice_soil = 'sand'
 
 
 def start():
     global choice_liquid
     global choice_soil
-    if choice_soil == 'sand' and choice_liquid == 'water':
-        v, h1, h2 = pipeline_3d_model.cycle(700)
+
+
+    if choice_soil == 'soil' and choice_liquid == 'liquid':
+        v, h1, h2 = pipeline_3d_model.cycle(500, D_M, D_P, D_P_ax1, D_P_ax2, LR_M, LR_P, LR_P_L, LR_P_R)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
-        pipeline_3d_model.graph(RES)
-    elif choice_soil == 'soil' and choice_liquid == 'liquid':
-        v, h1, h2 = pipeline_3d_model.cycle(700, D_M, D_P, D_P_ax1, D_P_ax2, LR_M, LR_P, LR_P_L, LR_P_R)
-        RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
-        pipeline_3d_model.graph(RES)
+        pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
 
 
 
@@ -151,96 +142,135 @@ win.maxsize(700, 800)"""
 # запрет на именения размера окна
 win.resizable(False, False)
 
-# фрейм с жидкостью
-frame1 = tk.Frame(win, bg='blue')
-frame1.place(relx=0, rely=0, relwidth=0.25, relheight=1)
-frame1.grid_columnconfigure(0, minsize=250)
-# виджеты фрейма с жидкостью
-tk.Label(frame1, text='Выберите жидкость', font=('Arial', 10, 'bold'), height=2, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-tk.Button(frame1, text='вода', command=water, activebackground='blue').grid(row=1, column=0, stick='we')
-
-# фрейм с породой
-frame2 = tk.Frame(win, bg='brown')
-frame2.place(relx=0.25, rely=0, relwidth=0.25, relheight=1)
-frame2.grid_columnconfigure(0, minsize=250)
-# виджеты фрейма с породой
-tk.Label(frame2, text='Выберите породу', font=('Arial', 10, 'bold'), height=2, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-tk.Button(frame2, text='песок', command=sand, activebackground='yellow').grid(row=2, column=0, stick='we')
 
 # стартовый фрейм
-frame3 = tk.Frame(win, bg='gray')
-frame3.place(relx=0.50, rely=0, relwidth=0.25, relheight=1)
-frame3.grid_columnconfigure(0, minsize=250)
+frame1 = tk.Frame(win, bg='gray')
+frame1.place(relx=0, rely=0, relwidth=0.25, relheight=1)
+frame1.grid_columnconfigure(0, minsize=250)
 # виджеты стартового фрейма
 
 # кнопка, для введения своих значений
-tk.Button(frame3, text='Ввести свои' + '\n' + 'коэффиценты [0;1]', command=rem_value, font=('Arial', 10)).grid(row=1, column=0, stick='we')
+tk.Button(frame1, text='Нажмите, чтобы ввести' + '\n' + 'свои коэффиценты [0;1]', command=rem_value, font=('Arial', 10)).grid(row=1, column=0, stick='we')
+
+
+# минимально количество жидкости в трубочке по вертикали после которого вода течёт
+tk.Label(frame1, text='DOWN_MIN', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_down_min = tk.Entry(frame1, fg="green", bg="white")
+entry_down_min.grid(stick='we')
+
+# доля от объёма воды, который утекает
+tk.Label(frame1, text='DOWN_PERC', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_down_pers = tk.Entry(frame1, fg="green", bg="white")
+entry_down_pers.grid(stick='we')
+
+# доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+tk.Label(frame1, text='DOWN_PERC_ax1', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_down_pers_ax1 = tk.Entry(frame1, fg="green", bg="white")
+entry_down_pers_ax1 .grid(stick='we')
+
+# доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+tk.Label(frame1, text='DOWN_PERC_ax2', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_down_pers_ax2 = tk.Entry(frame1, fg="green", bg="white")
+entry_down_pers_ax2.grid(stick='we')
+
+# минимальноеколичество по горизонтали для вытекания
+tk.Label(frame1, text='LR_MIN', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_lr_min = tk.Entry(frame1, fg="green", bg="white")
+entry_lr_min.grid(stick='we')
+
+# Сколько вытекает в общем по горизонтали
+tk.Label(frame1, text='LR_PERC', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_lr_pers = tk.Entry(frame1, fg="green", bg="white")
+entry_lr_pers.grid(stick='we')
+
+# то, сколько перетекает влево
+tk.Label(frame1, text='LR_PERC_L', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_lr_pers_l = tk.Entry(frame1, fg="green", bg="white")
+entry_lr_pers_l.grid(stick='we')
+
+# то, сколько перетекает вправо
+tk.Label(frame1, text='LR_PERC_R', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_lr_pers_r = tk.Entry(frame1, fg="green", bg="white")
+entry_lr_pers_r.grid(stick='we')
+
+tk.Label(frame1, text='Нажмите старт для вывода', font=('Arial', 10, 'bold'), height=2, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+# кнопка старта
+tk.Button(frame1, text='Старт', command=start, font=('Arial', 10), width=10, height=3).grid()
+
+
+# фрейм с изменяемыми значениями
+frame2 = tk.Frame(win, bg='black')
+frame2.place(relx=0.25, rely=0, relwidth=0.25, relheight=1)
+frame2.grid_columnconfigure(0, minsize=250)
+# виджеты
+
+# разрез
+tk.Label(frame2, text=('Укажите номер' + '\n' + 'разреза'), font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_incision = tk.Entry(frame2, fg="green", bg="white")
+# размещение надо прописывать отдельно, иначе не будет работать
+entry_incision.grid(stick='we')
+tk.Button(frame2, text='сохранить номер', command=incision, font=('Arial', 10)).grid(stick='we')
+
+
+# разделение на два грунта
+tk.Label(frame2, text='Укажите уровень' + '\n' + 'разделения', font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_separation = tk.Entry(frame2, fg="green", bg="white")
+entry_separation.grid(stick='we')
+tk.Button(frame2, text='сохранить уровень', font=('Arial', 10), command=separation()).grid(stick='we')
+
+"""
+!!!!!!!!! третий фрейм, коэффиценты для второго слоя !!!!!
+"""
+frame3 = tk.Frame(win, bg='gray')
+frame3.place(relx=0.50, rely=0, relwidth=0.25, relheight=1)
+frame3.grid_columnconfigure(0, minsize=250)
+# виджеты
+
+# кнопка, для введения значений 2 слоя
+tk.Button(frame3, text='Нажмите, чтобы ввести' + '\n' + 'коэффиценты 2 слоя', command=rem_value, font=('Arial', 10)).grid(row=1, column=0, stick='we')
 
 
 # минимально количество жидкости в трубочке по вертикали после которого вода течёт
 tk.Label(frame3, text='DOWN_MIN', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_down_min = tk.Entry(frame3, fg="green", bg="white")
-entry_down_min.grid(stick='we')
+entry1_down_min = tk.Entry(frame3, fg="green", bg="white")
+entry1_down_min.grid(stick='we')
 
 # доля от объёма воды, который утекает
-tk.Label(frame3, text='DOWN_PERS', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_down_pers = tk.Entry(frame3, fg="green", bg="white")
-entry_down_pers.grid(stick='we')
+tk.Label(frame3, text='DOWN_PERC', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_down_pers = tk.Entry(frame3, fg="green", bg="white")
+entry1_down_pers.grid(stick='we')
 
 # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
-tk.Label(frame3, text='DOWN_PERS_ax1', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_down_pers_ax1 = tk.Entry(frame3, fg="green", bg="white")
-entry_down_pers_ax1 .grid(stick='we')
+tk.Label(frame3, text='DOWN_PERC_ax1', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_down_pers_ax1 = tk.Entry(frame3, fg="green", bg="white")
+entry1_down_pers_ax1 .grid(stick='we')
 
 # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
-tk.Label(frame3, text='DOWN_PERS_ax2', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_down_pers_ax2 = tk.Entry(frame3, fg="green", bg="white")
-entry_down_pers_ax2.grid(stick='we')
+tk.Label(frame3, text='DOWN_PERC_ax2', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_down_pers_ax2 = tk.Entry(frame3, fg="green", bg="white")
+entry1_down_pers_ax2.grid(stick='we')
 
 # минимальноеколичество по горизонтали для вытекания
 tk.Label(frame3, text='LR_MIN', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_lr_min = tk.Entry(frame3, fg="green", bg="white")
-entry_lr_min.grid(stick='we')
+entry1_lr_min = tk.Entry(frame3, fg="green", bg="white")
+entry1_lr_min.grid(stick='we')
 
 # Сколько вытекает в общем по горизонтали
-tk.Label(frame3, text='LR_PERS', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_lr_pers = tk.Entry(frame3, fg="green", bg="white")
-entry_lr_pers.grid(stick='we')
+tk.Label(frame3, text='LR_PERC', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_lr_pers = tk.Entry(frame3, fg="green", bg="white")
+entry1_lr_pers.grid(stick='we')
 
 # то, сколько перетекает влево
-tk.Label(frame3, text='LR_PERS_L', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_lr_pers_l = tk.Entry(frame3, fg="green", bg="white")
-entry_lr_pers_l.grid(stick='we')
+tk.Label(frame3, text='LR_PERC_L', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_lr_pers_l = tk.Entry(frame3, fg="green", bg="white")
+entry1_lr_pers_l.grid(stick='we')
 
 # то, сколько перетекает вправо
-tk.Label(frame3, text='LR_PERS_R', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_lr_pers_r = tk.Entry(frame3, fg="green", bg="white")
-entry_lr_pers_r.grid(stick='we')
-
-tk.Label(frame3, text='Нажмите старт для вывода', font=('Arial', 10, 'bold'), height=2, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-# кнопка старта
-tk.Button(frame3, text='Старт', command=start, font=('Arial', 10), width=10, height=3).grid()
+tk.Label(frame3, text='LR_PERC_R', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_lr_pers_r = tk.Entry(frame3, fg="green", bg="white")
+entry1_lr_pers_r.grid(stick='we')
 
 
-# фрейм с изменяемыми значениями
-frame4 = tk.Frame(win, bg='black')
-frame4.place(relx=0.75, rely=0, relwidth=0.25, relheight=1)
-frame4.grid_columnconfigure(0, minsize=250)
-# виджеты
-
-# разрез
-tk.Label(frame4, text=('Укажите номер' + '\n' + 'разреза'), font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_incision = tk.Entry(frame4, fg="green", bg="white")
-# размещение надо прописывать отдельно, иначе не будет работать
-entry_incision.grid(stick='we')
-tk.Button(frame4, text='сохранить номер', command=incision, font=('Arial', 10)).grid(stick='we')
-
-
-# разделение на два грунта
-tk.Label(frame4, text='Укажите уровень' + '\n' + 'разделения', font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_separation = tk.Entry(frame4, fg="green", bg="white")
-entry_separation.grid(stick='we')
-tk.Button(frame4, text='сохранить уровень', font=('Arial', 10), command=separation()).grid(stick='we')
 
 
 win.mainloop()
