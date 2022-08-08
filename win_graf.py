@@ -4,9 +4,9 @@
 """
 import tkinter as tk
 import pipeline_3d_model
-import numpy as np
-from copy import deepcopy
-import time
+#import numpy as np
+#from copy import deepcopy
+#import time
 choice_soil = 'soil'
 choice_liquid = 'liquid'
 ax_incision = pipeline_3d_model.ax0_max // 2

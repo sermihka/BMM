@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 import time
 
 # размеры массива
-ax0_max = 40
-ax1_max = 40
-ax2_max = 40
 
-vertical = np.array([[[0. for i in range(ax0_max + 1)] for j in range(ax1_max + 1)] for n in range(ax2_max + 1)])
+
+vertical = np.array([[[0. for i in range(15)] for j in range(15)] for n in range(15)])
 # вдоль оси ax1
 horizontal_ax1 = deepcopy(vertical)
 # вдоль оси ax2
@@ -18,19 +16,18 @@ horizontal_ax2 = deepcopy(vertical)
 # vertical[ax0][ax1][ax2] ax0 - вертикаль
 
 def cycle(z,
-          DOWN_MIN = 0.1,  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
-          DOWN_PERS = 0.4,  # доля от объёма воды, которая утекает
-          DOWN_PERS_ax1 = 0.3,  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
-          DOWN_PERS_ax2 = 0.3,  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
-          LR_MIN = 0.05,  # минимальноеколичество по горизонтали для вытекания
-          LR_PERS = 0.3,  # Сколько вытекает в общем
-          LR_PERS_L = 0.3,  # то, сколько перетекает в бок
-          LR_PERS_R = 0.3,
+          DOWN_MIN=0.1,  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
+          DOWN_PERS=0.4,  # доля от объёма воды, которая утекает
+          DOWN_PERS_ax1=0.3,  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+          DOWN_PERS_ax2=0.3,  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+          LR_MIN=0.05,  # минимальноеколичество по горизонтали для вытекания
+          LR_PERS=0.3,  # Сколько вытекает в общем
+          LR_PERS_L=0.3,  # то, сколько перетекает в бок
+          LR_PERS_R=0.3,
           vertic=vertical,
           horizon_ax1=horizontal_ax1,
           horizon_ax2=horizontal_ax2
           ):
-
     # для проверки того, как долго работает цикл
     start_time = time.time()
 
@@ -43,37 +40,49 @@ def cycle(z,
     LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
 
     for n in range(z):
+        sh = np.shape(vertic)
         # типо жидкость капает
-        vertic[0][ax1_max // 2][ax2_max // 2] = 1
-
+        vertic[0][sh[1] // 2][sh[2] // 2] = 1
+        # print(vertic)
+        # print(horizon_ax1)
         # копируем массивы
         ver = deepcopy(vertic)
         hor_ax1 = deepcopy(horizon_ax1)
         hor_ax2 = deepcopy(horizon_ax2)
         # условие на прохождение по оси ax0
-        if (4 + n // 50) < ax0_max:
-            n0 = (6 + n // 50)
-        else:
-            n0 = ax0_max
-        # условия на прохождение по оси ax1
-        if (4 + n // 50 + ax1_max // 2) < ax1_max and (ax1_max // 2 - (4 + n // 50)) < ax1_max:
-            n1_min = (ax1_max // 2 - (4 + n // 50))
-            n1_max = (4 + n // 50 + ax1_max // 2)
-        else:
-            n1_min = 0
-            n1_max = ax1_max
 
-        # условия на прохождение по оси ax2
-        if (4 + n // 50 + ax2_max // 2) < ax2_max and (ax2_max // 2 - (4 + n // 50)) < ax2_max:
-            n2_min = (ax2_max // 2 - (4 + n // 50))
-            n2_max = (4 + n // 50 + ax2_max // 2)
-        else:
-            n2_min = 0
-            n2_max = ax2_max
+        sh_1 = np.shape(ver)
 
-        for ax0 in range(n0 + 1):
-            for ax1 in range(n1_min, n1_max + 1):
-                for ax2 in range(n2_min, n2_max + 1):
+        if hor_ax1[0][sh_1[1] - 1][sh_1[2] // 2] > LR_MIN or hor_ax1[1][sh_1[1] - 1][
+            sh_1[2] // 2] > LR_MIN or hor_ax1[0][sh_1[1] - 1][sh_1[2] // 2] > LR_MIN:
+            print('h2')
+            app1 = np.array([[[0. for i in range(sh_1[2])]] for j in range(sh_1[0])])
+            app2 = np.array([[[0. for i in range(sh_1[2])]] for j in range(sh_1[0])])
+            app = np.append(app1, app2, axis=1)
+            ver = np.append(ver, app, axis=1)
+            hor_ax1 = np.append(hor_ax1, app, axis=1)
+            hor_ax2 = np.append(hor_ax2, app, axis=1)
+            ver = np.append(app, ver, axis=1)
+            hor_ax1 = np.append(app, hor_ax1, axis=1)
+            hor_ax2 = np.append(app, hor_ax2, axis=1)
+        sh_2 = np.shape(ver)
+
+        if hor_ax2[0][sh_2[1] // 2][sh_2[2] - 1] > LR_MIN or hor_ax2[1][sh_2[1] // 2][
+            sh_2[2] - 1] > LR_MIN or hor_ax2[2][sh_2[1] // 2][sh_2[2] - 1] > LR_MIN:
+            app1 = np.array([[[0.] for i in range(sh_2[1])] for j in range(sh_2[0])])
+            app2 = np.array([[[0.] for i in range(sh_2[1])] for j in range(sh_2[0])])
+            app = np.append(app1, app2, axis=2)
+            ver = np.append(ver, app, axis=2)
+            ver = np.append(app, ver, axis=2)
+            hor_ax1 = np.append(hor_ax1, app, axis=2)
+            hor_ax1 = np.append(app, hor_ax1, axis=2)
+            hor_ax2 = np.append(hor_ax2, app, axis=2)
+            hor_ax2 = np.append(app, hor_ax2, axis=2)
+
+        for ax0 in range(sh[0]):
+            for ax1 in range(sh[1]):
+                for ax2 in range(sh[2]):
+
                     # проход по вертикальным трубочкам
                     if vertic[ax0][ax1][ax2] > DOWN_MIN:
                         # то, сколько вытекает
@@ -137,6 +146,7 @@ def cycle(z,
 
                     # проход по горизонтальным вдоль оси ax2
                     if horizon_ax2[ax0][ax1][ax2] > LR_MIN:
+
                         ax2spread = horizon_ax2[ax0][ax1][ax2] * LR_PERS
                         # перетикает вправо вдоль оси ax1
                         ax2spread_r = ax2spread * LR_PERS_R
@@ -163,6 +173,40 @@ def cycle(z,
                         hor_ax2[ax0][ax1][ax2 - 1] = hor_ax2[ax0][ax1][ax2 - 1] + ax2spread_l
                         ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] + ax2spread_d
 
+            if ver[sh[0] - 1][sh[1] // 2][sh[2] // 2] > DOWN_MIN:
+                app1 = np.array([[[0. for i in range(sh[1])] for j in range(sh[2])]])
+                app2 = np.array([[[0. for i in range(sh[1])] for j in range(sh[2])]])
+                app = np.append(app1, app2, axis=0)
+                ver = np.append(ver, app, axis=0)
+                hor_ax1 = np.append(hor_ax1, app, axis=0)
+                hor_ax2 = np.append(hor_ax2, app, axis=0)
+            sh_1 = np.shape(ver)
+
+            if hor_ax1[0][sh_1[1] - 1][sh_1[2] // 2] > LR_MIN or hor_ax1[1][sh_1[1] - 1][
+                sh_1[2] // 2] > LR_MIN or hor_ax1[0][sh_1[1] - 1][sh_1[2] // 2] > LR_MIN:
+                print('h2')
+                app1 = np.array([[[0. for i in range(sh_1[2])]] for j in range(sh_1[0])])
+                app2 = np.array([[[0. for i in range(sh_1[2])]] for j in range(sh_1[0])])
+                app = np.append(app1, app2, axis=1)
+                ver = np.append(ver, app, axis=1)
+                hor_ax1 = np.append(hor_ax1, app, axis=1)
+                hor_ax2 = np.append(hor_ax2, app, axis=1)
+                ver = np.append(app, ver, axis=1)
+                hor_ax1 = np.append(app, hor_ax1, axis=1)
+                hor_ax2 = np.append(app, hor_ax2, axis=1)
+            sh_2 = np.shape(ver)
+            if hor_ax2[0][sh_2[1] // 2][sh_2[2] - 1] > LR_MIN or hor_ax2[1][sh_2[1] // 2][
+                sh_2[2] - 1] > LR_MIN or hor_ax2[2][sh_2[1] // 2][sh_2[2] - 1] > LR_MIN:
+                app1 = np.array([[[0.] for i in range(sh_2[1])] for j in range(sh_2[0])])
+                app2 = np.array([[[0.] for i in range(sh_2[1])] for j in range(sh_2[0])])
+                app = np.append(app1, app2, axis=2)
+                ver = np.append(ver, app, axis=2)
+                ver = np.append(app, ver, axis=2)
+                hor_ax1 = np.append(hor_ax1, app, axis=2)
+                hor_ax1 = np.append(app, hor_ax1, axis=2)
+                hor_ax2 = np.append(hor_ax2, app, axis=2)
+                hor_ax2 = np.append(app, hor_ax2, axis=2)
+
         # опять перезаписываем массивы
         vertic = deepcopy(ver)
         horizon_ax1 = deepcopy(hor_ax1)
@@ -170,10 +214,12 @@ def cycle(z,
 
     # выводит время работы цикла
     print('Finished cycle in %s seconds' % (time.time() - start_time))
-    return vertic, horizon_ax1, horizon_ax2
+    sha = np.shape(vertic)
+    # print(vertic)
+    return vertic, horizon_ax1, horizon_ax2, sha
 
 
-def graph(result, ax2_incision=ax2_max // 2):
+def graph(result, ax2_incision):
     # окно для отрисовки графика
     fig_2d = plt.figure(figsize=(7, 7))
     ax_2d = fig_2d.add_subplot()
@@ -183,7 +229,7 @@ def graph(result, ax2_incision=ax2_max // 2):
     plt.show()
 
 
-def incision(v, h1, h2, ax2_incision=ax2_max // 2):
+def incision(v, h1, h2, ax0_max, ax1_max, ax2_incision):
     # ну а тут у нас по сути разрез берётся
     result = np.array([[0. for f in range(ax0_max)] for g in range(ax1_max)])
     for ax0 in range(ax0_max):
@@ -191,8 +237,9 @@ def incision(v, h1, h2, ax2_incision=ax2_max // 2):
             result[ax0][ax1] = v[ax0][ax1][ax2_incision] + h1[ax0][ax1][ax2_incision] + h2[ax0][ax1][ax2_incision]
     return result
 
-#v, h1, h2 = cycle(400)
+
+v, h1, h2, sha = cycle(100)
 # вызов разреза
-#RES = incision(v, h1, h2)
+RES = incision(v, h1, h2, sha[0], sha[1], sha[2] // 2)
 # вызов графика
-#graph(RES)
+graph(RES, sha[2] // 2)
