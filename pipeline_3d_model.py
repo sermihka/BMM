@@ -41,7 +41,8 @@ def cycle(z,
 
     # то, сколько перетекает в вертикаль
     LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
-
+    n_v_1 = 3
+    n_h_1 = 3
     for n in range(z):
         # типо жидкость капает
         vertic[0][ax1_max // 2][ax2_max // 2] = 1
@@ -51,31 +52,16 @@ def cycle(z,
         hor_ax1 = deepcopy(horizon_ax1)
         hor_ax2 = deepcopy(horizon_ax2)
         # условие на прохождение по оси ax0
-        if (4 + n // 50) < ax0_max:
-            n0 = (6 + n // 50)
-        else:
-            n0 = ax0_max
-        # условия на прохождение по оси ax1
-        if (4 + n // 50 + ax1_max // 2) < ax1_max and (ax1_max // 2 - (4 + n // 50)) < ax1_max:
-            n1_min = (ax1_max // 2 - (4 + n // 50))
-            n1_max = (4 + n // 50 + ax1_max // 2)
-        else:
-            n1_min = 0
-            n1_max = ax1_max
 
-        # условия на прохождение по оси ax2
-        if (4 + n // 50 + ax2_max // 2) < ax2_max and (ax2_max // 2 - (4 + n // 50)) < ax2_max:
-            n2_min = (ax2_max // 2 - (4 + n // 50))
-            n2_max = (4 + n // 50 + ax2_max // 2)
-        else:
-            n2_min = 0
-            n2_max = ax2_max
-
-        for ax0 in range(n0 + 1):
-            for ax1 in range(n1_min, n1_max + 1):
-                for ax2 in range(n2_min, n2_max + 1):
+        n_v = n_v_1
+        n_h = n_h_1
+        for ax0 in range(n_v):
+            for ax1 in range((ax1_max // 2) - n_h, (ax1_max // 2) + n_h):
+                for ax2 in range((ax2_max // 2) - n_h, (ax2_max // 2) + n_h):
                     # проход по вертикальным трубочкам
                     if vertic[ax0][ax1][ax2] > DOWN_MIN:
+                        if ax0 + 1 == n_v:
+                            n_v_1 += 1
                         # то, сколько вытекает
                         down = vertic[ax0][ax1][ax2] * DOWN_PERS
                         # то, сколько перетекает в ось ax1
@@ -106,7 +92,8 @@ def cycle(z,
 
                     # проход по горизонтальным вдоль оси ax1
                     if horizon_ax1[ax0][ax1][ax2] > LR_MIN:
-
+                        if ax1 + 1 == (ax1_max // 2) + n_h or ax1 - 1 == (ax1_max // 2) - n_h:
+                            n_h_1 += 1
                         spread = horizon_ax1[ax0][ax1][ax2] * LR_PERS
                         # перетикает вправо вдоль оси ax1
                         spread_r = spread * LR_PERS_R
@@ -191,7 +178,7 @@ def incision(v, h1, h2, ax2_incision=ax2_max // 2):
             result[ax0][ax1] = v[ax0][ax1][ax2_incision] + h1[ax0][ax1][ax2_incision] + h2[ax0][ax1][ax2_incision]
     return result
 
-#v, h1, h2 = cycle(400)
+#v, h1, h2 = cycle(500)
 # вызов разреза
 #RES = incision(v, h1, h2)
 # вызов графика

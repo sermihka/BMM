@@ -123,7 +123,7 @@ def start():
 
 
     if choice_soil == 'soil' and choice_liquid == 'liquid':
-        v, h1, h2 = pipeline_3d_model.cycle(500, D_M, D_P, D_P_ax1, D_P_ax2, LR_M, LR_P, LR_P_L, LR_P_R)
+        v, h1, h2 = pipeline_3d_model.cycle(400, D_M, D_P, D_P_ax1, D_P_ax2, LR_M, LR_P, LR_P_L, LR_P_R)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
         pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
 
