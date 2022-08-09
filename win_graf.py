@@ -4,9 +4,6 @@ import numpy as np
 
 import pipeline_3d_model
 
-# коэффиценты отвечающие за
-choice_soil = 'soil'
-choice_liquid = 'liquid'
 ax_incision = pipeline_3d_model.ax0_max // 2
 
 # Массив слоёв( их коэффицентов и высоты их начала)
@@ -17,7 +14,8 @@ count_l_or_tr = 0
 # массив для стандартной ситуации(один слой)
 list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]])
 
-list_slope = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]])
+list_slope = np.array([[0, 0., 0., 0., 0., 0.0, 0., 0., 0.],
+                       [1, 0., 0., 0., 0., 0.0, 0., 0., 0.]])
 
 
 def count_start():
@@ -28,6 +26,14 @@ def count_start():
     global list_layer
     list_layer = np.array([[0. for i in range(9)]])
     count_l_or_tr = 0
+
+
+def count_slope():
+    """
+    запускает растекание со склоном(рельефом)
+    """
+    global count_l_or_tr
+    count_l_or_tr = 2
 
 
 def rem_value():
@@ -100,6 +106,7 @@ def rem_value():
     else:
         list[0][8] = float(LRpr)
 
+
 def incision():
     global ax_incision
     n = int(entry_incision.get())
@@ -128,6 +135,7 @@ def layer__():
         count_l_or_tr = 1
         choice_liquid = 'liquid'
         choice_soil = 'soil'
+
 
 def save_layer(n):
     """
@@ -207,21 +215,85 @@ def save_layer(n):
         list_layer[n][8] = float(LRpr)
 
 
+def save_slope(n):
+    global list_slope
+
+    D = entry1_down_min.get()
+    if D == '':
+        return
+    if float(D) < 0 or float(D) > 1:
+        return
+    else:
+        list_slope[n][1] = float(D)
+
+    Dp = entry1_down_pers.get()
+    if Dp == '':
+        return
+    if float(Dp) < 0 or float(Dp) > 1:
+        return
+    else:
+        list_slope[n][2] = float(Dp)
+
+    Dpax1 = entry1_down_pers_ax1.get()
+    if Dpax1 == '':
+        return
+    if float(Dpax1) < 0 or float(Dpax1) > 1:
+        return
+    else:
+        list_slope[n][3] = float(Dpax1)
+
+    Dpax2 = entry1_down_pers_ax2.get()
+    if Dpax2 == '':
+        return
+    if float(Dpax2) < 0 or float(Dpax2) > 1:
+        return
+    else:
+        list_slope[n][4] = float(Dpax2)
+
+    LR = entry1_lr_min.get()
+    if LR == '':
+        return
+    if float(LR) < 0 or float(LR) > 1:
+        return
+    else:
+        list_slope[n][5] = float(LR)
+
+    LRp = entry1_lr_pers.get()
+    if LRp == '':
+        return
+    if float(LRp) < 0 or float(LRp) > 1:
+        return
+    else:
+        list_slope[n][6] = float(LRp)
+
+    LRpl = entry1_lr_pers_l.get()
+    if LRpl == '':
+        return
+    if float(LRpl) < 0 or float(LRpl) > 1:
+        return
+    else:
+        list_slope[n][7] = float(LRpl)
+
+    LRpr = entry1_lr_pers_r.get()
+    if LRpr == '':
+        return
+    if float(LRpr) < 0 or float(LRpr) > 1:
+        return
+    else:
+        list_slope[n][8] = float(LRpr)
+
 
 def start():
-    global choice_liquid
-    global choice_soil
-
     if count_l_or_tr == 0:
         v, h1, h2 = pipeline_3d_model.cycle(500, list=list)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
         pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
     if count_l_or_tr == 1:
-        v, h1, h2 = pipeline_3d_model.cycle(500, list=list_layer)
+        v, h1, h2 = pipeline_3d_model.cycle(1000, list=list_layer)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
         pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
     if count_l_or_tr == 2:
-        v, h1, h2 = pipeline_3d_model.cycle(500, list=list_layer)
+        v, h1, h2 = pipeline_3d_model.cycle(1500, count=1, list=list_slope)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
         pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
 
@@ -323,9 +395,7 @@ frame3.place(relx=0.50, rely=0, relwidth=0.25, relheight=1)
 frame3.grid_columnconfigure(0, minsize=250)
 # виджеты
 
-# кнопка, для введения значений 2 слоя
-tk.Button(frame3, text='Нажмите, чтобы ввести' + '\n' + 'коэффиценты 2 слоя', command=rem_value,
-          font=('Arial', 10)).grid(row=1, column=0, stick='we')
+tk.Label(frame3, text='Коэффиценты для \n слоёв и склона', relief=tk.GROOVE, bg='white').grid(stick='we')
 
 tk.Label(frame3, text='height', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
 entry1_height = tk.Entry(frame3, fg="green", bg="white")
@@ -376,9 +446,9 @@ entry1_lr_pers_r.grid(stick='we')
 """
 frame4 = tk.Frame(win, bg='red')
 frame4.place(relx=0.75, rely=0, relwidth=0.25, relheight=1)
-frame4.grid_columnconfigure([0, 1, 2, 3, 4], minsize=40)
 
 sh_layer = np.shape(list_layer)
+
 
 def list1():
     global list_layer
@@ -388,7 +458,7 @@ def list1():
         save_layer(n)
 
 
-tk.Button(frame4, text='1', font=('Arial', 15), command=list1).grid(row=0, column=0)
+tk.Button(frame4, text='1', font=('Arial', 15), command=list1).grid(row=0, column=1)
 
 
 def list2():
@@ -399,7 +469,7 @@ def list2():
         save_layer(n)
 
 
-tk.Button(frame4, text='2', font=('Arial', 15), command=list2).grid(row=0, column=1)
+tk.Button(frame4, text='2', font=('Arial', 15), command=list2).grid(row=2, column=1)
 
 
 def list3():
@@ -410,7 +480,7 @@ def list3():
         save_layer(n)
 
 
-tk.Button(frame4, text='3', font=('Arial', 15), command=list3).grid(row=0, column=2)
+tk.Button(frame4, text='3', font=('Arial', 15), command=list3).grid(row=3, column=1)
 
 
 def list4():
@@ -421,7 +491,7 @@ def list4():
         save_layer(n)
 
 
-tk.Button(frame4, text='4', font=('Arial', 15), command=list4).grid(row=0, column=3)
+tk.Button(frame4, text='4', font=('Arial', 15), command=list4).grid(row=4, column=1)
 
 
 def list5():
@@ -432,9 +502,25 @@ def list5():
         save_layer(n)
 
 
-tk.Button(frame4, text='5', font=('Arial', 15), command=list5).grid(row=0, column=4)
+tk.Button(frame4, text='5', font=('Arial', 15), command=list5).grid(row=5, column=1)
+tk.Button(frame4, text='Вернутся к' + '\n' + 'исходным' + '\n' + 'значениям', font=('Arial', 15),
+          command=count_start).grid(row=2, column=0)
+tk.Button(frame4, text='установить \n распространение \n по склону', font=('Arial', 15), command=count_slope).grid(row=3, column=0)
 
-tk.Button(frame4, text='склон', font=('Arial', 15)).grid(row=1, column=0)
-tk.Button(frame4, text='count' + '\n' + 'standard', font=('Arial', 15), command=count_start).grid(row=3, column=0)
+
+def slope1():
+    global list_slope
+    save_slope(0)
+
+
+tk.Button(frame4, text='slope1', font=('Arial', 15), command=slope1).grid(row=4, column=0)
+
+
+def slope2():
+    global list_slope
+    save_slope(1)
+
+
+tk.Button(frame4, text='slope2', font=('Arial', 15), command=slope2).grid(row=5, column=0)
 
 win.mainloop()

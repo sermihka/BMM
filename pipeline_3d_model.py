@@ -71,31 +71,51 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
             break
         # Прохождения по массивам и "распространение жидкости"
         for ax0 in range(n_v):
+            if count == 0:
+                for y in range(sh_list[0]):
 
-            for y in range(sh_list[0]):
+                    """
+                    Проверка того, на каком слое мы находимся
+                    и установка соответсвующих коэффицентов
+                    """
+                    if list[y][0] <= ax0:
+                        DOWN_MIN = list[y][
+                            1]  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
+                        DOWN_PERS = list[y][2]  # доля от объёма воды, которая утекает
+                        DOWN_PERS_ax1 = list[y][
+                            3]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+                        DOWN_PERS_ax2 = list[y][
+                            4]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+                        LR_MIN = list[y][5]  # минимальноеколичество по горизонтали для вытекания
+                        LR_PERS = list[y][6]  # Сколько вытекает в общем
+                        LR_PERS_L = list[y][7]  # то, сколько перетекает в бок
+                        LR_PERS_R = list[y][8]
 
-                """
-                Проверка того, на каком слое мы находимся
-                и установка соответсвующих коэффицентов
-                """
-                if list[y][0] <= ax0:
-                    DOWN_MIN = list[y][
-                        1]  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
-                    DOWN_PERS = list[y][2]  # доля от объёма воды, которая утекает
-                    DOWN_PERS_ax1 = list[y][
-                        3]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
-                    DOWN_PERS_ax2 = list[y][
-                        4]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
-                    LR_MIN = list[y][5]  # минимальноеколичество по горизонтали для вытекания
-                    LR_PERS = list[y][6]  # Сколько вытекает в общем
-                    LR_PERS_L = list[y][7]  # то, сколько перетекает в бок
-                    LR_PERS_R = list[y][8]
             # процент(от DOWN_PERS) который переходит в вертикаль ячейки, которая ниже
             DOWN_PERS_DOWN = 1.0 - DOWN_PERS_ax1 - DOWN_PERS_ax2
 
             # то, сколько перетекает в вертикаль
             LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
             for ax1 in range((ax1_max // 2) - n_h, (ax1_max // 2) + n_h):
+                if count == 1:
+                    if tr[ax0][ax1] > 0:
+                        DOWN_MIN = list[1][1]
+                        DOWN_PERS = list[1][2]
+                        DOWN_PERS_ax1 = list[1][3]
+                        DOWN_PERS_ax2 = list[1][4]
+                        LR_MIN = list[1][5]
+                        LR_PERS = list[1][6]
+                        LR_PERS_L = list[1][7]
+                        LR_PERS_R = list[1][8]
+                    else:
+                        DOWN_MIN = list[0][1]
+                        DOWN_PERS = list[0][2]
+                        DOWN_PERS_ax1 = list[0][3]
+                        DOWN_PERS_ax2 = list[0][4]
+                        LR_MIN = list[0][5]
+                        LR_PERS = list[0][6]
+                        LR_PERS_L = list[0][7]
+                        LR_PERS_R = list[0][8]
                 for ax2 in range((ax2_max // 2) - n_h, (ax2_max // 2) + n_h):
                     # проход по вертикальным трубочкам
                     if vertic[ax0][ax1][ax2] > DOWN_MIN:
