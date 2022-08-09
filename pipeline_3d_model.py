@@ -4,12 +4,16 @@ import matplotlib.pyplot as plt
 import time
 from tqdm import tqdm
 
-
 # размеры массива
 ax0_max = 40
 ax1_max = 40
 ax2_max = 40
 
+
+# двумерный массив, для имитации склона
+tr = np.tri(ax0_max, ax1_max, -1)
+
+# массивы трубочек
 vertical = np.array([[[0. for i in range(ax0_max + 1)] for j in range(ax1_max + 1)] for n in range(ax2_max + 1)])
 # вдоль оси ax1
 horizontal_ax1 = deepcopy(vertical)
@@ -19,12 +23,13 @@ horizontal_ax2 = deepcopy(vertical)
 
 # vertical[ax0][ax1][ax2] ax0 - вертикаль
 
-def cycle(z, list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]
-                              ]),
+def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]]),
+          # массив слоёв(хранит высоту их начала и коэффиценты)
           vertic=vertical,
           horizon_ax1=horizontal_ax1,
           horizon_ax2=horizontal_ax2
           ):
+    global tr
     DOWN_MIN = 0.1  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
     DOWN_PERS = 0.4  # доля от объёма воды, которая утекает
     DOWN_PERS_ax1 = 0.3  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
@@ -38,6 +43,7 @@ def cycle(z, list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]
 
     TUBE_MAX = 1.0  # максимально возможное значение в трубочке
 
+    # значения
     n_v_1 = 3
     n_h_1 = 3
     sh_list = np.shape(list)
@@ -51,7 +57,8 @@ def cycle(z, list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]
         ver = deepcopy(vertic)
         hor_ax1 = deepcopy(horizon_ax1)
         hor_ax2 = deepcopy(horizon_ax2)
-        # условие на прохождение по оси ax0
+
+        # проверка на то, что мы не выходим за рамки массива
         if n_v_1 < ax0_max:
             n_v = n_v_1
         else:
@@ -62,13 +69,23 @@ def cycle(z, list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]
         else:
             print("усё")
             break
+        # Прохождения по массивам и "распространение жидкости"
         for ax0 in range(n_v):
+
             for y in range(sh_list[0]):
+
+                """
+                Проверка того, на каком слое мы находимся
+                и установка соответсвующих коэффицентов
+                """
                 if list[y][0] <= ax0:
-                    DOWN_MIN = list[y][1]  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
+                    DOWN_MIN = list[y][
+                        1]  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
                     DOWN_PERS = list[y][2]  # доля от объёма воды, которая утекает
-                    DOWN_PERS_ax1 = list[y][3]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
-                    DOWN_PERS_ax2 = list[y][4]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+                    DOWN_PERS_ax1 = list[y][
+                        3]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+                    DOWN_PERS_ax2 = list[y][
+                        4]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
                     LR_MIN = list[y][5]  # минимальноеколичество по горизонтали для вытекания
                     LR_PERS = list[y][6]  # Сколько вытекает в общем
                     LR_PERS_L = list[y][7]  # то, сколько перетекает в бок
@@ -98,6 +115,7 @@ def cycle(z, list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]
                         tube_max_ax1 = (TUBE_MAX - hor_ax1[ax0][ax1][ax2])
                         tube_max_ax2 = (TUBE_MAX - hor_ax2[ax0][ax1][ax2])
 
+                        # проверка на излишки
                         if (down_ax1 > tube_max_ax1):
                             down_ax1 = tube_max_ax1
                         if (down_ax2 > tube_max_ax2):
@@ -193,15 +211,19 @@ def graph(result, ax2_incision=ax2_max // 2):
 
 
 def incision(v, h1, h2, ax2_incision=ax2_max // 2):
-    # ну а тут у нас по сути разрез берётся
+    """
+    здесь формируется итоговый массив, который отображется в итоге на графике
+    с помощью градиента
+    """
+
     result = np.array([[0. for f in range(ax0_max)] for g in range(ax1_max)])
     for ax0 in range(ax0_max):
         for ax1 in range(ax1_max):
             result[ax0][ax1] = v[ax0][ax1][ax2_incision] + h1[ax0][ax1][ax2_incision] + h2[ax0][ax1][ax2_incision]
     return result
 
-#v, h1, h2 = cycle(500)
+# v, h1, h2 = cycle(500)
 # вызов разреза
-#RES = incision(v, h1, h2)
+# RES = incision(v, h1, h2)
 # вызов графика
-#graph(RES)
+# graph(RES)

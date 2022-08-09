@@ -1,48 +1,40 @@
-"""
-Окно три столбца, первый столбец выбрать жидкость , пока что только вода, второй столбец выбор почвы ,
-пока что только песок , последний столбец кнопка старт (начало)
-"""
 import tkinter as tk
 
 import numpy as np
 
 import pipeline_3d_model
-#import numpy as np
-#from copy import deepcopy
-#import time
+
+# коэффиценты отвечающие за
 choice_soil = 'soil'
 choice_liquid = 'liquid'
 ax_incision = pipeline_3d_model.ax0_max // 2
-D_M = 0.1
-D_P = 0.4
-D_P_ax1 = 0.3
-D_P_ax2 = 0.3
 
-LR_M = 0.01
-LR_P = 0.3
-LR_P_L = 0.3
-LR_P_R = 0.3
+# Массив слоёв( их коэффицентов и высоты их начала)
+list_layer = np.array([[0. for i in range(9)]])
+# Переменная от которой зависит какие значения мы подадим при старте
+count_l_or_tr = 0
 
-list_layer = np.array([[0]])
-count_layer = 1
-
+# массив для стандартной ситуации(один слой)
 list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]])
+
+list_slope = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]])
+
+
+def count_start():
+    """
+    Возвращает счётчик на начальную(стандартную) ситуацию
+    """
+    global count_l_or_tr
+    global list_layer
+    list_layer = np.array([[0. for i in range(9)]])
+    count_l_or_tr = 0
 
 
 def rem_value():
-    global choice_liquid
-    global choice_soil
-
-    global D_M
-    global D_P
-    global D_P_ax1
-    global D_P_ax2
-
-    global LR_P
-    global LR_M
-    global LR_P_R
-    global LR_P_L
-
+    """
+    сохранение коэффицентов для одного слоя
+    тоесть тут "стандартная ситуация" и только один однородный слой
+    """
 
     D = entry_down_min.get()
     if D == '':
@@ -50,8 +42,7 @@ def rem_value():
     if float(D) < 0 or float(D) > 1:
         return
     else:
-        D_M = float(D)
-        list[0][1] = D_M
+        list[0][1] = float(D)
 
     Dp = entry_down_pers.get()
     if Dp == '':
@@ -59,8 +50,7 @@ def rem_value():
     if float(Dp) < 0 or float(Dp) > 1:
         return
     else:
-        D_P = float(Dp)
-        list[0][2] = D_P
+        list[0][2] = float(Dp)
 
     Dpax1 = entry_down_pers_ax1.get()
     if Dpax1 == '':
@@ -68,8 +58,7 @@ def rem_value():
     if float(Dpax1) < 0 or float(Dpax1) > 1:
         return
     else:
-        D_P_ax1 = float(Dpax1)
-        list[0][3] = D_P_ax1
+        list[0][3] = float(Dpax1)
 
     Dpax2 = entry_down_pers_ax2.get()
     if Dpax2 == '':
@@ -77,8 +66,7 @@ def rem_value():
     if float(Dpax2) < 0 or float(Dpax2) > 1:
         return
     else:
-        D_P_ax2 = float(Dpax2)
-        list[0][4] = D_P_ax2
+        list[0][4] = float(Dpax2)
 
     LR = entry_lr_min.get()
     if LR == '':
@@ -86,8 +74,7 @@ def rem_value():
     if float(LR) < 0 or float(LR) > 1:
         return
     else:
-        LR_M = float(LR)
-        list[0][5] = LR_M
+        list[0][5] = float(LR)
 
     LRp = entry_lr_pers.get()
     if LRp == '':
@@ -95,8 +82,7 @@ def rem_value():
     if float(LRp) < 0 or float(LRp) > 1:
         return
     else:
-        LR_P = float(LRp)
-        list[0][6] = LR_P
+        list[0][6] = float(LRp)
 
     LRpl = entry_lr_pers_l.get()
     if LRpl == '':
@@ -104,8 +90,7 @@ def rem_value():
     if float(LRpl) < 0 or float(LRpl) > 1:
         return
     else:
-        LR_P_L = float(LRpl)
-        list[0][7] = LR_P_L
+        list[0][7] = float(LRpl)
 
     LRpr = entry_lr_pers_r.get()
     if LRpr == '':
@@ -113,11 +98,7 @@ def rem_value():
     if float(LRpr) < 0 or float(LRpr) > 1:
         return
     else:
-        LR_P_R = float(LRpr)
-        list[0][8] = LR_P_R
-    choice_liquid = 'liquid'
-    choice_soil = 'soil'
-
+        list[0][8] = float(LRpr)
 
 def incision():
     global ax_incision
@@ -127,17 +108,103 @@ def incision():
 
 
 def layer__():
+    """
+    Тут сохраняется кол-во слоёв
+    ( и проверяется что их не больше 5)
+    """
+    global count_l_or_tr
+    global choice_liquid
+    global choice_soil
     global list_layer
     if entry_layer.get() == '':
         return
     else:
         n = int(entry_layer.get())
         if n > 1 and n < 5:
+            list_layer = np.array([[0. for i in range(9)]])
             for i in range(1, n):
-                list_layer = np.append(list_layer, [[i]], axis=0)
+                list_layer = np.append(list_layer, [[0 for i in range(9)]], axis=0)
         print(list_layer)
+        count_l_or_tr = 1
+        choice_liquid = 'liquid'
+        choice_soil = 'soil'
 
+def save_layer(n):
+    """
+    Тут происходит сохранение коэфецентов для слоёв
+    """
+    global list_layer
+    H = entry1_height.get()
+    if H == '':
+        return
+    if int(H) < 0 or int(H) > pipeline_3d_model.ax0_max:
+        return
+    else:
+        list_layer[n][0] = int(H)
 
+    D = entry1_down_min.get()
+    if D == '':
+        return
+    if float(D) < 0 or float(D) > 1:
+        return
+    else:
+        list_layer[n][1] = float(D)
+
+    Dp = entry1_down_pers.get()
+    if Dp == '':
+        return
+    if float(Dp) < 0 or float(Dp) > 1:
+        return
+    else:
+        list_layer[n][2] = float(Dp)
+
+    Dpax1 = entry1_down_pers_ax1.get()
+    if Dpax1 == '':
+        return
+    if float(Dpax1) < 0 or float(Dpax1) > 1:
+        return
+    else:
+        list_layer[n][3] = float(Dpax1)
+
+    Dpax2 = entry1_down_pers_ax2.get()
+    if Dpax2 == '':
+        return
+    if float(Dpax2) < 0 or float(Dpax2) > 1:
+        return
+    else:
+        list_layer[n][4] = float(Dpax2)
+
+    LR = entry1_lr_min.get()
+    if LR == '':
+        return
+    if float(LR) < 0 or float(LR) > 1:
+        return
+    else:
+        list_layer[n][5] = float(LR)
+
+    LRp = entry1_lr_pers.get()
+    if LRp == '':
+        return
+    if float(LRp) < 0 or float(LRp) > 1:
+        return
+    else:
+        list_layer[n][6] = float(LRp)
+
+    LRpl = entry1_lr_pers_l.get()
+    if LRpl == '':
+        return
+    if float(LRpl) < 0 or float(LRpl) > 1:
+        return
+    else:
+        list_layer[n][7] = float(LRpl)
+
+    LRpr = entry1_lr_pers_r.get()
+    if LRpr == '':
+        return
+    if float(LRpr) < 0 or float(LRpr) > 1:
+        return
+    else:
+        list_layer[n][8] = float(LRpr)
 
 
 
@@ -145,12 +212,18 @@ def start():
     global choice_liquid
     global choice_soil
 
-
-    if choice_soil == 'soil' and choice_liquid == 'liquid':
-        v, h1, h2 = pipeline_3d_model.cycle(500, list)
+    if count_l_or_tr == 0:
+        v, h1, h2 = pipeline_3d_model.cycle(500, list=list)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
         pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
-
+    if count_l_or_tr == 1:
+        v, h1, h2 = pipeline_3d_model.cycle(500, list=list_layer)
+        RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
+        pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
+    if count_l_or_tr == 2:
+        v, h1, h2 = pipeline_3d_model.cycle(500, list=list_layer)
+        RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
+        pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
 
 
 win = tk.Tk()
@@ -166,7 +239,6 @@ win.maxsize(700, 800)"""
 # запрет на именения размера окна
 win.resizable(False, False)
 
-
 # стартовый фрейм
 frame1 = tk.Frame(win, bg='gray')
 frame1.place(relx=0, rely=0, relwidth=0.25, relheight=1)
@@ -174,8 +246,8 @@ frame1.grid_columnconfigure(0, minsize=250)
 # виджеты стартового фрейма
 
 # кнопка, для введения своих значений
-tk.Button(frame1, text='Нажмите, чтобы ввести' + '\n' + 'свои коэффиценты [0;1]', command=rem_value, font=('Arial', 10)).grid(row=1, column=0, stick='we')
-
+tk.Button(frame1, text='Нажмите, чтобы ввести' + '\n' + 'свои коэффиценты [0;1]', command=rem_value,
+          font=('Arial', 10)).grid(row=1, column=0, stick='we')
 
 # минимально количество жидкости в трубочке по вертикали после которого вода течёт
 tk.Label(frame1, text='DOWN_MIN', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
@@ -190,7 +262,7 @@ entry_down_pers.grid(stick='we')
 # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
 tk.Label(frame1, text='DOWN_PERC_ax1', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
 entry_down_pers_ax1 = tk.Entry(frame1, fg="green", bg="white")
-entry_down_pers_ax1 .grid(stick='we')
+entry_down_pers_ax1.grid(stick='we')
 
 # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
 tk.Label(frame1, text='DOWN_PERC_ax2', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
@@ -217,10 +289,10 @@ tk.Label(frame1, text='LR_PERC_R', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='w
 entry_lr_pers_r = tk.Entry(frame1, fg="green", bg="white")
 entry_lr_pers_r.grid(stick='we')
 
-tk.Label(frame1, text='Нажмите старт для вывода', font=('Arial', 10, 'bold'), height=2, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+tk.Label(frame1, text='Нажмите старт для вывода', font=('Arial', 10, 'bold'), height=2, relief=tk.GROOVE,
+         bg='#2F4F4F').grid(stick='we')
 # кнопка старта
 tk.Button(frame1, text='Старт', command=start, font=('Arial', 10), width=10, height=3).grid()
-
 
 # фрейм с изменяемыми значениями
 frame2 = tk.Frame(win, bg='black')
@@ -229,15 +301,16 @@ frame2.grid_columnconfigure(0, minsize=250)
 # виджеты
 
 # разрез
-tk.Label(frame2, text=('Укажите номер' + '\n' + 'разреза'), font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+tk.Label(frame2, text=('Укажите номер' + '\n' + 'разреза'), font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE,
+         bg='#2F4F4F').grid(stick='we')
 entry_incision = tk.Entry(frame2, fg="green", bg="white")
 # размещение надо прописывать отдельно, иначе не будет работать
 entry_incision.grid(stick='we')
 tk.Button(frame2, text='сохранить номер', command=incision, font=('Arial', 10)).grid(stick='we')
 
-
 # разделение на два грунта
-tk.Label(frame2, text='Укажите количество' + '\n' + 'слоёв [2,5]', font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+tk.Label(frame2, text='Укажите количество' + '\n' + 'слоёв [2,5]', font=('Arial', 10, 'bold'), height=3,
+         relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
 entry_layer = tk.Entry(frame2, fg="green", bg="white")
 entry_layer.grid(stick='we')
 tk.Button(frame2, text='сохранить кол-во', font=('Arial', 10), command=layer__).grid(stick='we')
@@ -251,8 +324,12 @@ frame3.grid_columnconfigure(0, minsize=250)
 # виджеты
 
 # кнопка, для введения значений 2 слоя
-tk.Button(frame3, text='Нажмите, чтобы ввести' + '\n' + 'коэффиценты 2 слоя', command=rem_value, font=('Arial', 10)).grid(row=1, column=0, stick='we')
+tk.Button(frame3, text='Нажмите, чтобы ввести' + '\n' + 'коэффиценты 2 слоя', command=rem_value,
+          font=('Arial', 10)).grid(row=1, column=0, stick='we')
 
+tk.Label(frame3, text='height', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry1_height = tk.Entry(frame3, fg="green", bg="white")
+entry1_height.grid(stick='we')
 
 # минимально количество жидкости в трубочке по вертикали после которого вода течёт
 tk.Label(frame3, text='DOWN_MIN', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
@@ -267,7 +344,7 @@ entry1_down_pers.grid(stick='we')
 # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
 tk.Label(frame3, text='DOWN_PERC_ax1', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
 entry1_down_pers_ax1 = tk.Entry(frame3, fg="green", bg="white")
-entry1_down_pers_ax1 .grid(stick='we')
+entry1_down_pers_ax1.grid(stick='we')
 
 # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
 tk.Label(frame3, text='DOWN_PERC_ax2', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
@@ -299,12 +376,65 @@ entry1_lr_pers_r.grid(stick='we')
 """
 frame4 = tk.Frame(win, bg='red')
 frame4.place(relx=0.75, rely=0, relwidth=0.25, relheight=1)
-frame4.grid_columnconfigure([0, 1, 2, 3, 4], minsize=50)
-tk.Button(frame4, text='1', font=('Arial', 15)).grid(row=0, column=0)
-tk.Button(frame4, text='2', font=('Arial', 15)).grid(row=0, column=1)
-tk.Button(frame4, text='3', font=('Arial', 15)).grid(row=0, column=2)
-tk.Button(frame4, text='4', font=('Arial', 15)).grid(row=0, column=3)
-tk.Button(frame4, text='5', font=('Arial', 15)).grid(row=0, column=4)
+frame4.grid_columnconfigure([0, 1, 2, 3, 4], minsize=40)
 
+sh_layer = np.shape(list_layer)
+
+def list1():
+    global list_layer
+    sh_layer = np.shape(list_layer)
+    n = 0
+    if n < sh_layer[0]:
+        save_layer(n)
+
+
+tk.Button(frame4, text='1', font=('Arial', 15), command=list1).grid(row=0, column=0)
+
+
+def list2():
+    global list_layer
+    sh_layer = np.shape(list_layer)
+    n = 1
+    if n < sh_layer[0]:
+        save_layer(n)
+
+
+tk.Button(frame4, text='2', font=('Arial', 15), command=list2).grid(row=0, column=1)
+
+
+def list3():
+    global list_layer
+    sh_layer = np.shape(list_layer)
+    n = 2
+    if n < sh_layer[0]:
+        save_layer(n)
+
+
+tk.Button(frame4, text='3', font=('Arial', 15), command=list3).grid(row=0, column=2)
+
+
+def list4():
+    global list_layer
+    sh_layer = np.shape(list_layer)
+    n = 3
+    if n < sh_layer[0]:
+        save_layer(n)
+
+
+tk.Button(frame4, text='4', font=('Arial', 15), command=list4).grid(row=0, column=3)
+
+
+def list5():
+    global list_layer
+    sh_layer = np.shape(list_layer)
+    n = 4
+    if n < sh_layer[0]:
+        save_layer(n)
+
+
+tk.Button(frame4, text='5', font=('Arial', 15), command=list5).grid(row=0, column=4)
+
+tk.Button(frame4, text='склон', font=('Arial', 15)).grid(row=1, column=0)
+tk.Button(frame4, text='count' + '\n' + 'standard', font=('Arial', 15), command=count_start).grid(row=3, column=0)
 
 win.mainloop()
