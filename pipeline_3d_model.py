@@ -2,6 +2,8 @@ import numpy as np
 from copy import deepcopy
 import matplotlib.pyplot as plt
 import time
+from tqdm import tqdm
+
 
 # размеры массива
 ax0_max = 40
@@ -17,33 +19,31 @@ horizontal_ax2 = deepcopy(vertical)
 
 # vertical[ax0][ax1][ax2] ax0 - вертикаль
 
-def cycle(z,
-          DOWN_MIN = 0.1,  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
-          DOWN_PERS = 0.4,  # доля от объёма воды, которая утекает
-          DOWN_PERS_ax1 = 0.3,  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
-          DOWN_PERS_ax2 = 0.3,  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
-          LR_MIN = 0.05,  # минимальноеколичество по горизонтали для вытекания
-          LR_PERS = 0.3,  # Сколько вытекает в общем
-          LR_PERS_L = 0.3,  # то, сколько перетекает в бок
-          LR_PERS_R = 0.3,
+def cycle(z, list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]
+                              ]),
           vertic=vertical,
           horizon_ax1=horizontal_ax1,
           horizon_ax2=horizontal_ax2
           ):
-
+    DOWN_MIN = 0.1  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
+    DOWN_PERS = 0.4  # доля от объёма воды, которая утекает
+    DOWN_PERS_ax1 = 0.3  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+    DOWN_PERS_ax2 = 0.3  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+    LR_MIN = 0.05  # минимальноеколичество по горизонтали для вытекания
+    LR_PERS = 0.3  # Сколько вытекает в общем
+    LR_PERS_L = 0.3  # то, сколько перетекает в бок
+    LR_PERS_R = 0.3
     # для проверки того, как долго работает цикл
     start_time = time.time()
 
     TUBE_MAX = 1.0  # максимально возможное значение в трубочке
 
-    # процент(от DOWN_PERS) который переходит в вертикаль ячейки, которая ниже
-    DOWN_PERS_DOWN = 1.0 - DOWN_PERS_ax1 - DOWN_PERS_ax2
-
-    # то, сколько перетекает в вертикаль
-    LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
     n_v_1 = 3
     n_h_1 = 3
-    for n in range(z):
+    sh_list = np.shape(list)
+    print(sh_list)
+    for n in tqdm(range(z)):
+
         # типо жидкость капает
         vertic[0][ax1_max // 2][ax2_max // 2] = 1
 
@@ -52,10 +52,32 @@ def cycle(z,
         hor_ax1 = deepcopy(horizon_ax1)
         hor_ax2 = deepcopy(horizon_ax2)
         # условие на прохождение по оси ax0
-
-        n_v = n_v_1
-        n_h = n_h_1
+        if n_v_1 < ax0_max:
+            n_v = n_v_1
+        else:
+            print("усё")
+            break
+        if n_h_1 < ax1_max:
+            n_h = n_h_1
+        else:
+            print("усё")
+            break
         for ax0 in range(n_v):
+            for y in range(sh_list[0]):
+                if list[y][0] <= ax0:
+                    DOWN_MIN = list[y][1]  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
+                    DOWN_PERS = list[y][2]  # доля от объёма воды, которая утекает
+                    DOWN_PERS_ax1 = list[y][3]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax1
+                    DOWN_PERS_ax2 = list[y][4]  # доля(от DOWN_PERS) который остаётся в этой ячейке, но переходит в горизонталь ax2
+                    LR_MIN = list[y][5]  # минимальноеколичество по горизонтали для вытекания
+                    LR_PERS = list[y][6]  # Сколько вытекает в общем
+                    LR_PERS_L = list[y][7]  # то, сколько перетекает в бок
+                    LR_PERS_R = list[y][8]
+            # процент(от DOWN_PERS) который переходит в вертикаль ячейки, которая ниже
+            DOWN_PERS_DOWN = 1.0 - DOWN_PERS_ax1 - DOWN_PERS_ax2
+
+            # то, сколько перетекает в вертикаль
+            LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
             for ax1 in range((ax1_max // 2) - n_h, (ax1_max // 2) + n_h):
                 for ax2 in range((ax2_max // 2) - n_h, (ax2_max // 2) + n_h):
                     # проход по вертикальным трубочкам

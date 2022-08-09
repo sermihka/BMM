@@ -3,6 +3,9 @@
 пока что только песок , последний столбец кнопка старт (начало)
 """
 import tkinter as tk
+
+import numpy as np
+
 import pipeline_3d_model
 #import numpy as np
 #from copy import deepcopy
@@ -19,6 +22,11 @@ LR_M = 0.01
 LR_P = 0.3
 LR_P_L = 0.3
 LR_P_R = 0.3
+
+list_layer = np.array([[0]])
+count_layer = 1
+
+list = np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]])
 
 
 def rem_value():
@@ -43,6 +51,7 @@ def rem_value():
         return
     else:
         D_M = float(D)
+        list[0][1] = D_M
 
     Dp = entry_down_pers.get()
     if Dp == '':
@@ -51,6 +60,7 @@ def rem_value():
         return
     else:
         D_P = float(Dp)
+        list[0][2] = D_P
 
     Dpax1 = entry_down_pers_ax1.get()
     if Dpax1 == '':
@@ -59,6 +69,7 @@ def rem_value():
         return
     else:
         D_P_ax1 = float(Dpax1)
+        list[0][3] = D_P_ax1
 
     Dpax2 = entry_down_pers_ax2.get()
     if Dpax2 == '':
@@ -67,6 +78,7 @@ def rem_value():
         return
     else:
         D_P_ax2 = float(Dpax2)
+        list[0][4] = D_P_ax2
 
     LR = entry_lr_min.get()
     if LR == '':
@@ -75,6 +87,7 @@ def rem_value():
         return
     else:
         LR_M = float(LR)
+        list[0][5] = LR_M
 
     LRp = entry_lr_pers.get()
     if LRp == '':
@@ -83,6 +96,7 @@ def rem_value():
         return
     else:
         LR_P = float(LRp)
+        list[0][6] = LR_P
 
     LRpl = entry_lr_pers_l.get()
     if LRpl == '':
@@ -91,6 +105,7 @@ def rem_value():
         return
     else:
         LR_P_L = float(LRpl)
+        list[0][7] = LR_P_L
 
     LRpr = entry_lr_pers_r.get()
     if LRpr == '':
@@ -99,6 +114,7 @@ def rem_value():
         return
     else:
         LR_P_R = float(LRpr)
+        list[0][8] = LR_P_R
     choice_liquid = 'liquid'
     choice_soil = 'soil'
 
@@ -110,8 +126,16 @@ def incision():
         ax_incision = (pipeline_3d_model.ax0_max // 2) + n
 
 
-def separation():
-    pass
+def layer__():
+    global list_layer
+    if entry_layer.get() == '':
+        return
+    else:
+        n = int(entry_layer.get())
+        if n > 1 and n < 5:
+            for i in range(1, n):
+                list_layer = np.append(list_layer, [[i]], axis=0)
+        print(list_layer)
 
 
 
@@ -123,7 +147,7 @@ def start():
 
 
     if choice_soil == 'soil' and choice_liquid == 'liquid':
-        v, h1, h2 = pipeline_3d_model.cycle(400, D_M, D_P, D_P_ax1, D_P_ax2, LR_M, LR_P, LR_P_L, LR_P_R)
+        v, h1, h2 = pipeline_3d_model.cycle(500, list)
         RES = pipeline_3d_model.incision(v, h1, h2, ax2_incision=ax_incision)
         pipeline_3d_model.graph(RES, ax2_incision=ax_incision)
 
@@ -213,10 +237,10 @@ tk.Button(frame2, text='сохранить номер', command=incision, font=(
 
 
 # разделение на два грунта
-tk.Label(frame2, text='Укажите уровень' + '\n' + 'разделения', font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
-entry_separation = tk.Entry(frame2, fg="green", bg="white")
-entry_separation.grid(stick='we')
-tk.Button(frame2, text='сохранить уровень', font=('Arial', 10), command=separation()).grid(stick='we')
+tk.Label(frame2, text='Укажите количество' + '\n' + 'слоёв [2,5]', font=('Arial', 10, 'bold'), height=3, relief=tk.GROOVE, bg='#2F4F4F').grid(stick='we')
+entry_layer = tk.Entry(frame2, fg="green", bg="white")
+entry_layer.grid(stick='we')
+tk.Button(frame2, text='сохранить кол-во', font=('Arial', 10), command=layer__).grid(stick='we')
 
 """
 !!!!!!!!! третий фрейм, коэффиценты для второго слоя !!!!!
@@ -270,7 +294,17 @@ tk.Label(frame3, text='LR_PERC_R', relief=tk.GROOVE, bg='#2F4F4F').grid(stick='w
 entry1_lr_pers_r = tk.Entry(frame3, fg="green", bg="white")
 entry1_lr_pers_r.grid(stick='we')
 
-
+"""
+4 
+"""
+frame4 = tk.Frame(win, bg='red')
+frame4.place(relx=0.75, rely=0, relwidth=0.25, relheight=1)
+frame4.grid_columnconfigure([0, 1, 2, 3, 4], minsize=50)
+tk.Button(frame4, text='1', font=('Arial', 15)).grid(row=0, column=0)
+tk.Button(frame4, text='2', font=('Arial', 15)).grid(row=0, column=1)
+tk.Button(frame4, text='3', font=('Arial', 15)).grid(row=0, column=2)
+tk.Button(frame4, text='4', font=('Arial', 15)).grid(row=0, column=3)
+tk.Button(frame4, text='5', font=('Arial', 15)).grid(row=0, column=4)
 
 
 win.mainloop()
