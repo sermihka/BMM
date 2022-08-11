@@ -25,9 +25,9 @@ horizontal_ax2 = deepcopy(vertical)
 
 def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3]]),
           # массив слоёв(хранит высоту их начала и коэффиценты)
-          vertic=vertical,
-          horizon_ax1=horizontal_ax1,
-          horizon_ax2=horizontal_ax2
+          vertic_per=vertical,
+          horizon_ax1_per=horizontal_ax1,
+          horizon_ax2_per=horizontal_ax2
           ):
     global tr
     DOWN_MIN = 0.1  # минимально количество жидкости в трубочке по вертикали после которого вода течёт
@@ -48,12 +48,12 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
     for n in tqdm(range(z)):
 
         # типо жидкость капает
-        vertic[0][ax1_max // 2][ax2_max // 2] = 1
+        vertic_per[0][ax1_max // 2][ax2_max // 2] = 1
 
         # копируем массивы
-        ver = deepcopy(vertic)
-        hor_ax1 = deepcopy(horizon_ax1)
-        hor_ax2 = deepcopy(horizon_ax2)
+        ver = deepcopy(vertic_per)
+        hor_ax1 = deepcopy(horizon_ax1_per)
+        hor_ax2 = deepcopy(horizon_ax2_per)
 
         # проверка на то, что мы не выходим за рамки массива
         if n_v_1 < ax0_max:
@@ -115,106 +115,205 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
                         LR_PERS_L = list[0][7]
                         LR_PERS_R = list[0][8]
                 for ax2 in range((ax2_max // 2) - n_h, (ax2_max // 2) + n_h):
-                    # проход по вертикальным трубочкам
-                    if vertic[ax0][ax1][ax2] > DOWN_MIN:
+                    # перетекание внутри клетки из вертикали в горизонталь этой же клетки
+                    if vertic_per[ax0][ax1][ax2] > DOWN_MIN:
                         if ax0 + 1 == n_v:
                             n_v_1 += 1
-                        # то, сколько вытекает
-                        down = vertic[ax0][ax1][ax2] * DOWN_PERS
+                        down_1 = vertic_per[ax0][ax1][ax2] * DOWN_PERS
                         # то, сколько перетекает в ось ax1
-                        down_ax1 = down * DOWN_PERS_ax1
+                        down_ax1 = down_1 * DOWN_PERS_ax1
                         # то, сколько перетекает в ось ax2
-                        down_ax2 = down * DOWN_PERS_ax2
-                        # то, сколько перетекает в вертикаль нижней ячейки
-                        down_down = down * DOWN_PERS_DOWN
+                        down_ax2 = down_1 * DOWN_PERS_ax2
 
-                        # то, сколько может втечь в нужную трубочку
-                        tube_max_down = (TUBE_MAX - ver[ax0 + 1][ax1][ax2])
                         tube_max_ax1 = (TUBE_MAX - hor_ax1[ax0][ax1][ax2])
                         tube_max_ax2 = (TUBE_MAX - hor_ax2[ax0][ax1][ax2])
 
-                        # проверка на излишки
                         if (down_ax1 > tube_max_ax1):
                             down_ax1 = tube_max_ax1
                         if (down_ax2 > tube_max_ax2):
                             down_ax2 = tube_max_ax2
-                        if (down_down > tube_max_down):
-                            down_down = tube_max_down
 
-                        down_stay = down - (down_down + down_ax1 + down_ax2)
+                        down_stay = down_1 - (down_ax1 + down_ax2)
 
-                        # сохранение результатов в массив "следующего поколения"
-                        ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] - down + down_stay
+                        ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] - down_1 + down_stay
                         hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + down_ax1
                         hor_ax2[ax0][ax1][ax2] = hor_ax2[ax0][ax1][ax2] + down_ax2
-                        ver[ax0 + 1][ax1][ax2] = ver[ax0 + 1][ax1][ax2] + down_down
 
-                    # проход по горизонтальным вдоль оси ax1
-                    if horizon_ax1[ax0][ax1][ax2] > LR_MIN:
+
+                    # перетекание внутри клетки из горизонтали по оси ax1 в вертикаль этой же клетки
+                    if horizon_ax1_per[ax0][ax1][ax2] > LR_MIN:
                         if ax1 + 1 == (ax1_max // 2) + n_h or ax1 - 1 == (ax1_max // 2) - n_h:
                             n_h_1 += 1
-                        spread = horizon_ax1[ax0][ax1][ax2] * LR_PERS
-                        # перетикает вправо вдоль оси ax1
-                        spread_r = spread * LR_PERS_R
-                        # перетикает влево вдоль оси ax1
-                        spread_l = spread * LR_PERS_L
+                        spread = horizon_ax1_per[ax0][ax1][ax2] * LR_PERS
                         # перетекает в вертикаль
                         spread_d = spread * LR_PERS_DOWN
-
-                        # дальше, по сути, всё аналогично вретикальному растеканию
-
-                        tube_max_sp_r = TUBE_MAX - hor_ax1[ax0][ax1 + 1][ax2]
-                        tube_max_sp_l = TUBE_MAX - hor_ax1[ax0][ax1 - 1][ax2]
                         tube_max_sp_d = TUBE_MAX - ver[ax0][ax1][ax2]
 
                         if spread_d > tube_max_sp_d:
                             spread_d = tube_max_sp_d
-                        if spread_l > tube_max_sp_l:
-                            spread_l = tube_max_sp_l
-                        if spread_r > tube_max_sp_r:
-                            spread_r = tube_max_sp_r
 
-                        spread_stay = spread - (spread_d + spread_r + spread_l)
+                        spread_stay = spread - spread_d
 
                         hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] - spread + spread_stay
-                        hor_ax1[ax0][ax1 + 1][ax2] = hor_ax1[ax0][ax1 + 1][ax2] + spread_r
-                        hor_ax1[ax0][ax1 - 1][ax2] = hor_ax1[ax0][ax1 - 1][ax2] + spread_l
                         ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] + spread_d
+                    # перетекание внутри клетки из горизонтали по оси ax2 в вертикаль этой же клетки
+                    if horizon_ax2_per[ax0][ax1][ax2] > LR_MIN:
+                        ax2spread = horizon_ax2_per[ax0][ax1][ax2] * LR_PERS
 
-                    # проход по горизонтальным вдоль оси ax2
-                    if horizon_ax2[ax0][ax1][ax2] > LR_MIN:
-                        ax2spread = horizon_ax2[ax0][ax1][ax2] * LR_PERS
-                        # перетикает вправо вдоль оси ax1
-                        ax2spread_r = ax2spread * LR_PERS_R
-                        # перетикает влево вдоль оси ax1
-                        ax2spread_l = ax2spread * LR_PERS_L
                         # перетекает в вертикаль
                         ax2spread_d = ax2spread * LR_PERS_DOWN
 
-                        ax2tube_max_sp_r = TUBE_MAX - hor_ax2[ax0][ax1][ax2 + 1]
-                        ax2tube_max_sp_l = TUBE_MAX - hor_ax2[ax0][ax1][ax2 - 1]
                         ax2tube_max_sp_d = TUBE_MAX - ver[ax0][ax1][ax2]
 
                         if ax2spread_d > ax2tube_max_sp_d:
                             ax2spread_d = ax2tube_max_sp_d
-                        if ax2spread_l > ax2tube_max_sp_l:
-                            ax2spread_l = ax2tube_max_sp_l
-                        if ax2spread_r > ax2tube_max_sp_r:
-                            ax2spread_r = ax2tube_max_sp_r
 
-                        ax2spread_stay = ax2spread - (ax2spread_d + ax2spread_r + ax2spread_l)
+                        ax2spread_stay = ax2spread - ax2spread_d
 
                         hor_ax2[ax0][ax1][ax2] = hor_ax2[ax0][ax1][ax2] - ax2spread + ax2spread_stay
-                        hor_ax2[ax0][ax1][ax2 + 1] = hor_ax2[ax0][ax1][ax2 + 1] + ax2spread_r
-                        hor_ax2[ax0][ax1][ax2 - 1] = hor_ax2[ax0][ax1][ax2 - 1] + ax2spread_l
                         ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] + ax2spread_d
 
-        # опять перезаписываем массивы
-        vertic = deepcopy(ver)
-        horizon_ax1 = deepcopy(hor_ax1)
-        horizon_ax2 = deepcopy(hor_ax2)
+                    # то сколько втекает в вертикаль клетки из клетки, кторая находится выше
+                    if ax0 > 0:
+                        if vertic_per[ax0 - 1][ax1][ax2] > DOWN_MIN:
 
-    return vertic, horizon_ax1, horizon_ax2
+                            # то, сколько вытекает
+                            down = vertic_per[ax0 - 1][ax1][ax2] * DOWN_PERS
+                            # то, сколько перетекает в вертикаль нижней ячейки
+                            down_down = down * DOWN_PERS_DOWN
+
+                            # то, сколько может втечь в нужную трубочку
+                            tube_max_down = (TUBE_MAX - ver[ax0][ax1][ax2])
+
+                            # проверка на излишки
+                            if (down_down > tube_max_down):
+                                down_down = tube_max_down
+
+                            down_stay = down - (down_down)
+
+                            # сохранение результатов в массив "следующего поколения"
+                            ver[ax0 - 1][ax1][ax2] = ver[ax0][ax1][ax2] - down + down_stay
+                            ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] + down_down
+
+                    # То, сколько перетекает из клетки слева и справа по оси ax1 в нащу клетку
+                    if horizon_ax1_per[ax0][ax1 - 1][ax2] > LR_MIN:
+                        if horizon_ax1_per[ax0][ax1 + 1][ax2] > LR_MIN:
+                            spread_1 = horizon_ax1_per[ax0][ax1 - 1][ax2] * LR_PERS
+                            spread_0 = horizon_ax1_per[ax0][ax1 + 1][ax2] * LR_PERS
+                            # перетикает вправо вдоль оси ax1
+                            spread_1rinl = spread_1 * LR_PERS_R
+                            spread_0linr = spread_0 * LR_PERS_L
+
+                            spread_sum = spread_0linr + spread_1rinl
+
+                            per1 = (spread_1rinl*1.)/(spread_sum*1.)
+                            per0 = (spread_0linr * 1.) / (spread_sum * 1.)
+
+
+                            tube_max_sp_ = TUBE_MAX - hor_ax1[ax0][ax1][ax2]
+
+                            if spread_sum > tube_max_sp_:
+                                spread_sum = tube_max_sp_
+
+                            spread_stay = (spread_1 + spread_0) - spread_sum
+                            stay_0 = per0 * spread_stay
+                            stay_1 = per1 * spread_stay
+
+                            hor_ax1[ax0][ax1 - 1][ax2] = hor_ax1[ax0][ax1 - 1][ax2] - spread_1 + stay_1
+                            hor_ax1[ax0][ax1 + 1][ax2] = hor_ax1[ax0][ax1 + 1][ax2] - spread_0 + stay_0
+                            hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + spread_sum
+                        else:
+                            spread_1 = horizon_ax1_per[ax0][ax1 - 1][ax2] * LR_PERS
+
+                            spread_1rinl = spread_1 * LR_PERS_R
+
+                            tube_max_sp_rinl = TUBE_MAX - hor_ax1[ax0][ax1][ax2]
+
+                            if spread_1rinl > tube_max_sp_rinl:
+                                spread_1rinl = tube_max_sp_rinl
+
+                            stay_1 = spread_1 - spread_1rinl
+
+                            hor_ax1[ax0][ax1 - 1][ax2] = hor_ax1[ax0][ax1 - 1][ax2] - spread_1 + stay_1
+                            hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + spread_1rinl
+                    elif horizon_ax1_per[ax0][ax1 + 1][ax2] > LR_MIN:
+                        spread_0 = horizon_ax1_per[ax0][ax1 + 1][ax2] * LR_PERS
+
+                        spread_0rinl = spread_0 * LR_PERS_R
+
+                        tube_max_sp_rinl = TUBE_MAX - hor_ax1[ax0][ax1][ax2]
+
+                        if spread_0rinl > tube_max_sp_rinl:
+                            spread_0rinl = tube_max_sp_rinl
+
+                        stay_0 = spread_0 - spread_0rinl
+
+                        hor_ax1[ax0][ax1 + 1][ax2] = hor_ax1[ax0][ax1 + 1][ax2] - spread_0 + stay_0
+                        hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + spread_0rinl
+
+                    # То, сколько перетекает из клетки слева и справа по оси ax2 в нащу клетку
+                    if horizon_ax1_per[ax0][ax1][ax2 - 1] > LR_MIN:
+                        if horizon_ax1_per[ax0][ax1][ax2 + 1] > LR_MIN:
+                            spread_1 = horizon_ax1_per[ax0][ax1][ax2 - 1] * LR_PERS
+                            spread_0 = horizon_ax1_per[ax0][ax1][ax2 + 1] * LR_PERS
+                            # перетикает вправо вдоль оси ax1
+                            spread_1rinl = spread_1 * LR_PERS_R
+                            spread_0linr = spread_0 * LR_PERS_L
+
+                            spread_sum = spread_0linr + spread_1rinl
+
+                            per1 = (spread_1rinl * 1.) / (spread_sum * 1.)
+                            per0 = (spread_0linr * 1.) / (spread_sum * 1.)
+
+                            tube_max_sp_ = TUBE_MAX - hor_ax1[ax0][ax1][ax2]
+
+                            if spread_sum > tube_max_sp_:
+                                spread_sum = tube_max_sp_
+
+                            spread_stay = (spread_1 + spread_0) - spread_sum
+                            stay_0 = per0 * spread_stay
+                            stay_1 = per1 * spread_stay
+
+                            hor_ax1[ax0][ax1][ax2 - 1] = hor_ax1[ax0][ax1][ax2 - 1] - spread_1 + stay_1
+                            hor_ax1[ax0][ax1][ax2 + 1] = hor_ax1[ax0][ax1][ax2 + 1] - spread_0 + stay_0
+                            hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + spread_sum
+                        else:
+                            spread_1 = horizon_ax1_per[ax0][ax1][ax2 - 1] * LR_PERS
+
+                            spread_1rinl = spread_1 * LR_PERS_R
+
+                            tube_max_sp_rinl = TUBE_MAX - hor_ax1[ax0][ax1][ax2]
+
+                            if spread_1rinl > tube_max_sp_rinl:
+                                spread_1rinl = tube_max_sp_rinl
+
+                            stay_1 = spread_1 - spread_1rinl
+
+                            hor_ax1[ax0][ax1][ax2 - 1] = hor_ax1[ax0][ax1][ax2 - 1] - spread_1 + stay_1
+                            hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + spread_1rinl
+
+                    elif horizon_ax1_per[ax0][ax1][ax2 + 1] > LR_MIN:
+                        spread_0 = horizon_ax1_per[ax0][ax1][ax2 + 1] * LR_PERS
+
+                        spread_0rinl = spread_0 * LR_PERS_R
+
+                        tube_max_sp_rinl = TUBE_MAX - hor_ax1[ax0][ax1][ax2]
+
+                        if spread_0rinl > tube_max_sp_rinl:
+                            spread_0rinl = tube_max_sp_rinl
+
+                        stay_0 = spread_0 - spread_0rinl
+
+                        hor_ax1[ax0][ax1][ax2 + 1] = hor_ax1[ax0][ax1][ax2 + 1] - spread_0 + stay_0
+                        hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + spread_0rinl
+
+
+        # опять перезаписываем массивы
+        vertic_per = deepcopy(ver)
+        horizon_ax1_per = deepcopy(hor_ax1)
+        horizon_ax2_per = deepcopy(hor_ax2)
+
+    return vertic_per, horizon_ax1_per, horizon_ax2_per
 
 
 def graph(result, ax2_incision=ax2_max // 2):
