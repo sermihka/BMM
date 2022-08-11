@@ -2,6 +2,7 @@ import numpy as np
 from copy import deepcopy
 import matplotlib.pyplot as plt
 import time
+# библиотека для проверки того, сколько по времени работает цикл
 from tqdm import tqdm
 
 # размеры массива
@@ -37,8 +38,6 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
     LR_PERS = 0.3  # Сколько вытекает в общем
     LR_PERS_L = 0.3  # то, сколько перетекает в бок
     LR_PERS_R = 0.3
-    # для проверки того, как долго работает цикл
-    start_time = time.time()
 
     TUBE_MAX = 1.0  # максимально возможное значение в трубочке
 
@@ -46,7 +45,6 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
     n_v_1 = 3
     n_h_1 = 3
     sh_list = np.shape(list)
-    print(sh_list)
     for n in tqdm(range(z)):
 
         # типо жидкость капает
@@ -96,6 +94,7 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
             # то, сколько перетекает в вертикаль
             LR_PERS_DOWN = 1.0 - (LR_PERS_L + LR_PERS_R)
             for ax1 in range((ax1_max // 2) - n_h, (ax1_max // 2) + n_h):
+                # тут проверка для режима со склоном
                 if count == 1:
                     if tr[ax0][ax1] > 0:
                         DOWN_MIN = list[1][1]
@@ -144,6 +143,7 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
 
                         down_stay = down - (down_down + down_ax1 + down_ax2)
 
+                        # сохранение результатов в массив "следующего поколения"
                         ver[ax0][ax1][ax2] = ver[ax0][ax1][ax2] - down + down_stay
                         hor_ax1[ax0][ax1][ax2] = hor_ax1[ax0][ax1][ax2] + down_ax1
                         hor_ax2[ax0][ax1][ax2] = hor_ax2[ax0][ax1][ax2] + down_ax2
@@ -214,8 +214,6 @@ def cycle(z, count=0, list=np.array([[0, 0.1, 0.4, 0.3, 0.3, 0.01, 0.3, 0.3, 0.3
         horizon_ax1 = deepcopy(hor_ax1)
         horizon_ax2 = deepcopy(hor_ax2)
 
-    # выводит время работы цикла
-    print('Finished cycle in %s seconds' % (time.time() - start_time))
     return vertic, horizon_ax1, horizon_ax2
 
 
